@@ -22,8 +22,8 @@
 
 */
 
-#include <errno.h>
 #include <assert.h>
+#include <errno.h>
 #include <stdio.h>
 #include <sys/wait.h>
 
@@ -33,37 +33,36 @@ int forked = 0;
 int worker_running = 0;
 
 coroutine void worker(void) {
-    while(1) {
-        if(forked)
-            break;
-        yield();
-    }
-    worker_running = 1;
+  while (1) {
+    if (forked)
+      break;
+    yield();
+  }
+  worker_running = 1;
 }
 
 int main() {
-    /* Start second coroutine before forking. */
-    go(worker());
-    /* Fork. */
-    pid_t pid = mfork();
+  /* Start second coroutine before forking. */
+  go(worker());
+  /* Fork. */
+  pid_t pid = mfork();
+  assert(pid != -1);
+  /* Parent waits for the child. */
+  if (pid > 0) {
+    int status;
+    pid = waitpid(pid, &status, 0);
     assert(pid != -1);
-    /* Parent waits for the child. */
-    if(pid > 0) {
-        int status;
-        pid = waitpid(pid, &status, 0);
-        assert(pid != -1);
-        assert(WIFEXITED(status));
-        assert(WEXITSTATUS(status) == 0);
-        return 0;
-    }
-
-    /* Child tries to make sure that there's only one coroutine running. */
-    forked = 1; 
-    int i;
-    for(i = 0; i != 20; ++i)
-        yield();
-    assert(!worker_running);
-
+    assert(WIFEXITED(status));
+    assert(WEXITSTATUS(status) == 0);
     return 0;
-}
+  }
 
+  /* Child tries to make sure that there's only one coroutine running. */
+  forked = 1;
+  int i;
+  for (i = 0; i != 20; ++i)
+    yield();
+  assert(!worker_running);
+
+  return 0;
+}

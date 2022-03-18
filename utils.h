@@ -32,16 +32,15 @@
 
 /*  Takes a pointer to a member variable and computes pointer to the structure
     that contains it. 'type' is type of the structure, not the member. */
-#define mill_cont(ptr, type, member) \
-    (ptr ? ((type*) (((char*) ptr) - offsetof(type, member))) : NULL)
+#define mill_cont(ptr, type, member)                                           \
+  (ptr ? ((type *)(((char *)ptr) - offsetof(type, member))) : NULL)
 
 /* Compile-time assert. */
-#define MILL_CT_ASSERT_HELPER2(prefix, line) \
-    prefix##line
-#define MILL_CT_ASSERT_HELPER1(prefix, line) \
-    MILL_CT_ASSERT_HELPER2(prefix, line)
-#define MILL_CT_ASSERT(x) \
-    typedef int MILL_CT_ASSERT_HELPER1(ct_assert_,__COUNTER__) [(x) ? 1 : -1]
+#define MILL_CT_ASSERT_HELPER2(prefix, line) prefix##line
+#define MILL_CT_ASSERT_HELPER1(prefix, line)                                   \
+  MILL_CT_ASSERT_HELPER2(prefix, line)
+#define MILL_CT_ASSERT(x)                                                      \
+  typedef int MILL_CT_ASSERT_HELPER1(ct_assert_, __COUNTER__)[(x) ? 1 : -1]
 
 #if defined __GNUC__ || defined __llvm__
 #define mill_fast(x) __builtin_expect(!!(x), 1)
@@ -53,15 +52,13 @@
 
 /* Define our own assert. This way we are sure that it stays in place even
    if the standard C assert would be thrown away by the compiler. */
-#define mill_assert(x) \
-    do {\
-        if (mill_slow(!(x))) {\
-            fprintf(stderr, "Assert failed: " #x " (%s:%d)\n",\
-                __FILE__, __LINE__);\
-            fflush(stderr);\
-            abort();\
-        }\
-    } while (0)
+#define mill_assert(x)                                                         \
+  do {                                                                         \
+    if (mill_slow(!(x))) {                                                     \
+      fprintf(stderr, "Assert failed: " #x " (%s:%d)\n", __FILE__, __LINE__);  \
+      fflush(stderr);                                                          \
+      abort();                                                                 \
+    }                                                                          \
+  } while (0)
 
 #endif
-

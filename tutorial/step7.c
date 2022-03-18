@@ -34,99 +34,98 @@
 #define CONN_FAILED 3
 
 coroutine void statistics(chan ch) {
-    int connections = 0;
-    int active = 0;
-    int failed = 0;
-    
-    while(1) {
-        int op = chr(ch, int);
+  int connections = 0;
+  int active = 0;
+  int failed = 0;
 
-        if(op == CONN_ESTABLISHED)
-            ++connections, ++active;
-        else
-            --active;
-        if(op == CONN_FAILED)
-            ++failed;
+  while (1) {
+    int op = chr(ch, int);
 
-        printf("Process ID: %d\n", (int)getpid());
-        printf("Total number of connections: %d\n", connections);
-        printf("Active connections: %d\n", active);
-        printf("Failed connections: %d\n\n", failed);
-    }
+    if (op == CONN_ESTABLISHED)
+      ++connections, ++active;
+    else
+      --active;
+    if (op == CONN_FAILED)
+      ++failed;
+
+    printf("Process ID: %d\n", (int)getpid());
+    printf("Total number of connections: %d\n", connections);
+    printf("Active connections: %d\n", active);
+    printf("Failed connections: %d\n\n", failed);
+  }
 }
 
 coroutine void dialogue(tcpsock as, chan ch) {
-    chs(ch, int, CONN_ESTABLISHED);
+  chs(ch, int, CONN_ESTABLISHED);
 
-    int64_t deadline = now() + 10000;
+  int64_t deadline = now() + 10000;
 
-    tcpsend(as, "What's your name?\r\n", 19, deadline);
-    if(errno != 0)
-        goto cleanup;
-    tcpflush(as, deadline);
-    if(errno != 0)
-        goto cleanup;
+  tcpsend(as, "What's your name?\r\n", 19, deadline);
+  if (errno != 0)
+    goto cleanup;
+  tcpflush(as, deadline);
+  if (errno != 0)
+    goto cleanup;
 
-    char inbuf[256];
-    size_t sz = tcprecvuntil(as, inbuf, sizeof(inbuf), "\r", 1, deadline);
-    if(errno != 0)
-        goto cleanup;
+  char inbuf[256];
+  size_t sz = tcprecvuntil(as, inbuf, sizeof(inbuf), "\r", 1, deadline);
+  if (errno != 0)
+    goto cleanup;
 
-    inbuf[sz - 1] = 0;
-    char outbuf[256];
-    int rc = snprintf(outbuf, sizeof(outbuf), "Hello, %s!\r\n", inbuf);
+  inbuf[sz - 1] = 0;
+  char outbuf[256];
+  int rc = snprintf(outbuf, sizeof(outbuf), "Hello, %s!\r\n", inbuf);
 
-    sz = tcpsend(as, outbuf, rc, deadline);
-    if(errno != 0)
-        goto cleanup;
-    tcpflush(as, deadline);
-    if(errno != 0)
-        goto cleanup;
+  sz = tcpsend(as, outbuf, rc, deadline);
+  if (errno != 0)
+    goto cleanup;
+  tcpflush(as, deadline);
+  if (errno != 0)
+    goto cleanup;
 
-    cleanup:
-    if(errno == 0)
-        chs(ch, int, CONN_SUCCEEDED);
-    else
-        chs(ch, int, CONN_FAILED);
-    tcpclose(as);
+cleanup:
+  if (errno == 0)
+    chs(ch, int, CONN_SUCCEEDED);
+  else
+    chs(ch, int, CONN_FAILED);
+  tcpclose(as);
 }
 
 int main(int argc, char *argv[]) {
 
-    int port = 5555;
-    int nproc = 1;
-    if(argc > 1)
-        port = atoi(argv[1]);
-    if(argc > 2)
-        nproc = atoi(argv[2]);
+  int port = 5555;
+  int nproc = 1;
+  if (argc > 1)
+    port = atoi(argv[1]);
+  if (argc > 2)
+    nproc = atoi(argv[2]);
 
-    ipaddr addr = iplocal(NULL, port, 0);
-    tcpsock ls = tcplisten(addr, 10);
-    if(!ls) {
-        perror("Can't open listening socket");
-        return 1;
+  ipaddr addr = iplocal(NULL, port, 0);
+  tcpsock ls = tcplisten(addr, 10);
+  if (!ls) {
+    perror("Can't open listening socket");
+    return 1;
+  }
+
+  int i;
+  for (i = 0; i < nproc - 1; ++i) {
+    pid_t pid = mfork();
+    if (pid < 0) {
+      perror("Can't create new process");
+      return 1;
     }
-
-    int i;
-    for (i = 0; i < nproc - 1; ++i) {
-        pid_t pid = mfork();
-        if(pid < 0) {
-           perror("Can't create new process");
-           return 1;
-        }
-        if(pid == 0) {
-          break;
-        }
+    if (pid == 0) {
+      break;
     }
+  }
 
-    chan ch = chmake(int, 0);
-    go(statistics(ch));
+  chan ch = chmake(int, 0);
+  go(statistics(ch));
 
-    while(1) {
-        tcpsock as = tcpaccept(ls, -1);
-        if(!as)
-            continue;
-        go(dialogue(as, ch));
-    }
+  while (1) {
+    tcpsock as = tcpaccept(ls, -1);
+    if (!as)
+      continue;
+    go(dialogue(as, ch));
+  }
 }
-

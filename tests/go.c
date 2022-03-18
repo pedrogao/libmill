@@ -22,8 +22,8 @@
 
 */
 
-#include <errno.h>
 #include <assert.h>
+#include <errno.h>
 #include <stdio.h>
 #include <sys/wait.h>
 
@@ -32,44 +32,41 @@
 int sum = 0;
 
 coroutine void worker(int count, int n) {
-    int i;
-    for(i = 0; i != count; ++i) {
-        sum += n;
-        yield();
-    }
+  int i;
+  for (i = 0; i != count; ++i) {
+    sum += n;
+    yield();
+  }
 }
 
-coroutine void dummy(void) {
-    msleep(now() + 50);
-}
+coroutine void dummy(void) { msleep(now() + 50); }
 
 int main() {
-    goprepare(10, 25000, 300);
+  goprepare(10, 25000, 300);
 
-    /* Try few coroutines with pre-prepared stacks. */
-    assert(errno == 0);
-    go(worker(3, 7));
-    go(worker(1, 11));
-    go(worker(2, 5));
-    msleep(100);
-    assert(sum == 42);
+  /* Try few coroutines with pre-prepared stacks. */
+  assert(errno == 0);
+  go(worker(3, 7));
+  go(worker(1, 11));
+  go(worker(2, 5));
+  msleep(100);
+  assert(sum == 42);
 
-    /* Test whether stack deallocation works. */
-    int i;
-    for(i = 0; i != 20; ++i)
-        go(dummy());
-    msleep(now() + 100);
+  /* Test whether stack deallocation works. */
+  int i;
+  for (i = 0; i != 20; ++i)
+    go(dummy());
+  msleep(now() + 100);
 
-    /* Try to fork the process. */
-    pid_t pid = mfork();
+  /* Try to fork the process. */
+  pid_t pid = mfork();
+  assert(pid != -1);
+  if (pid > 0) {
+    int status;
+    pid = waitpid(pid, &status, 0);
     assert(pid != -1);
-    if(pid > 0) {
-        int status;
-        pid = waitpid(pid, &status, 0);
-        assert(pid != -1);
-        assert(WIFEXITED(status));
-    }
+    assert(WIFEXITED(status));
+  }
 
-    return 0;
+  return 0;
 }
-

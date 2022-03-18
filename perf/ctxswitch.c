@@ -24,42 +24,41 @@
 
 #include <assert.h>
 #include <stdint.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/time.h>
 
 #include "../libmill.h"
 
 static coroutine void worker(long count) {
-    long i;
-    for(i = 0; i != count; ++i)
-        yield();
+  long i;
+  for (i = 0; i != count; ++i)
+    yield();
 }
 
 int main(int argc, char *argv[]) {
-    if(argc != 2) {
-        printf("usage: ctxswitch <millions-of-context-switches>\n");
-        return 1;
-    }
-    long count = atol(argv[1]) * 1000000 / 2;
+  if (argc != 2) {
+    printf("usage: ctxswitch <millions-of-context-switches>\n");
+    return 1;
+  }
+  long count = atol(argv[1]) * 1000000 / 2;
 
-    int64_t start = now();
-    go(worker(count));
+  int64_t start = now();
+  go(worker(count));
 
-    long i;
-    for(i = 0; i != count; ++i)
-        yield();
+  long i;
+  for (i = 0; i != count; ++i)
+    yield();
 
-    int64_t stop = now();
-    long duration = (long)(stop - start);
-    long ns = (duration * 1000000) / (count * 2);
+  int64_t stop = now();
+  long duration = (long)(stop - start);
+  long ns = (duration * 1000000) / (count * 2);
 
-    printf("performed %ldM context switches in %f seconds\n",
-        (long)(count * 2 / 1000000), ((float)duration) / 1000);
-    printf("duration of one context switch: %ld ns\n", ns);
-    printf("context switches per second: %fM\n",
-        (float)(1000000000 / ns) / 1000000);
+  printf("performed %ldM context switches in %f seconds\n",
+         (long)(count * 2 / 1000000), ((float)duration) / 1000);
+  printf("duration of one context switch: %ld ns\n", ns);
+  printf("context switches per second: %fM\n",
+         (float)(1000000000 / ns) / 1000000);
 
-    return 0;
+  return 0;
 }
-

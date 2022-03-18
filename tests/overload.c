@@ -28,26 +28,25 @@
 #include "../libmill.h"
 
 coroutine void relay(chan src, chan dst) {
-    while(1) {
-       int val = chr(src, int);
-       chs(dst, int, val);
-    }
+  while (1) {
+    int val = chr(src, int);
+    chs(dst, int, val);
+  }
 }
 
 int main() {
-    chan left = chmake(int, 0);
-    chan right = chmake(int, 0);
+  chan left = chmake(int, 0);
+  chan right = chmake(int, 0);
 
-    go(relay(left, right));
-    go(relay(right, left));
+  go(relay(left, right));
+  go(relay(right, left));
 
-    chs(left, int, 42);
+  chs(left, int, 42);
 
-    /* Fail with exit code 128+SIGALRM if we deadlock */
-    alarm(1);
+  /* Fail with exit code 128+SIGALRM if we deadlock */
+  alarm(1);
 
-    msleep(now() + 500);
+  msleep(now() + 500);
 
-    return 0;
+  return 0;
 }
-

@@ -31,33 +31,32 @@ static int dummy1 = 0;
 static int dummy2 = 0;
 
 coroutine void worker(void) {
-    /* Test whether newly created coroutine has CLS set to NULL. */
-    assert(cls() == NULL);
+  /* Test whether newly created coroutine has CLS set to NULL. */
+  assert(cls() == NULL);
 
-    /* Check whether CLS remains unchanged after yielding control
-       to the main coroutine. */
-    setcls(&dummy2);
-    assert(cls() == &dummy2);
-    yield();
-    assert(cls() == &dummy2);
+  /* Check whether CLS remains unchanged after yielding control
+     to the main coroutine. */
+  setcls(&dummy2);
+  assert(cls() == &dummy2);
+  yield();
+  assert(cls() == &dummy2);
 }
 
 int main() {
-    /* Test whether CLS of the main coroutine is NULL on program startup. */
-    assert(cls() == NULL);
+  /* Test whether CLS of the main coroutine is NULL on program startup. */
+  assert(cls() == NULL);
 
-    /* Basic functionality. */
-    setcls(&dummy1);
-    assert(cls() == &dummy1);
+  /* Basic functionality. */
+  setcls(&dummy1);
+  assert(cls() == &dummy1);
 
-    /* Check whether CLS is not messed up by launching a new coroutine. */
-    go(worker());
-    assert(cls() == &dummy1);
-    yield();
+  /* Check whether CLS is not messed up by launching a new coroutine. */
+  go(worker());
+  assert(cls() == &dummy1);
+  yield();
 
-    /* Check whether CLS is not messed up when coroutine terminates. */
-    assert(cls() == &dummy1);
+  /* Check whether CLS is not messed up when coroutine terminates. */
+  assert(cls() == &dummy1);
 
-    return 0;
+  return 0;
 }
-

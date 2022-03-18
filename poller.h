@@ -40,4 +40,3 @@ void mill_wait(int block);
 void mill_poller_postfork(void);
 
 #endif
-

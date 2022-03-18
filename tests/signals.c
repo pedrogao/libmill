@@ -35,48 +35,47 @@
 static int signal_pipe[2];
 
 void signal_handler(int signo) {
-    assert(signo == SIGNAL);
-    char b = signo;
-    ssize_t sz = write(signal_pipe[1], &b, 1);
-    assert(sz == 1);
+  assert(signo == SIGNAL);
+  char b = signo;
+  ssize_t sz = write(signal_pipe[1], &b, 1);
+  assert(sz == 1);
 }
 
 coroutine void sender(chan ch) {
-    char signo = chr(ch, char);
-    int err = kill(getpid(), signo);
-    assert(err == 0);
+  char signo = chr(ch, char);
+  int err = kill(getpid(), signo);
+  assert(err == 0);
 }
 
 coroutine void receiver(chan ch) {
-    int events = fdwait(signal_pipe[0], FDW_IN, -1);
-    assert(events == FDW_IN);
+  int events = fdwait(signal_pipe[0], FDW_IN, -1);
+  assert(events == FDW_IN);
 
-    char signo;
-    ssize_t sz = read(signal_pipe[0], &signo, 1);
-    assert(sz == 1);
-    assert(signo == SIGNAL);
+  char signo;
+  ssize_t sz = read(signal_pipe[0], &signo, 1);
+  assert(sz == 1);
+  assert(signo == SIGNAL);
 
-    chs(ch, char, signo);
+  chs(ch, char, signo);
 }
 
 int main() {
-    int err = pipe(signal_pipe);
-    assert(err == 0);
+  int err = pipe(signal_pipe);
+  assert(err == 0);
 
-    signal(SIGNAL, signal_handler);
+  signal(SIGNAL, signal_handler);
 
-    chan sendch = chmake(char, 0);
-    chan recvch = chmake(char, 0);
+  chan sendch = chmake(char, 0);
+  chan recvch = chmake(char, 0);
 
-    int i;
-    for(i = 0; i < COUNT; ++i) {
-        go(sender(sendch));
-        go(receiver(recvch));
-        chs(sendch, char, SIGNAL);
-        int signo = chr(recvch, char);
-        assert(signo == SIGNAL);
-    }
+  int i;
+  for (i = 0; i < COUNT; ++i) {
+    go(sender(sendch));
+    go(receiver(recvch));
+    chs(sendch, char, SIGNAL);
+    int signo = chr(recvch, char);
+    assert(signo == SIGNAL);
+  }
 
-    return 0;
+  return 0;
 }
-

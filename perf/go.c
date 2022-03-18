@@ -24,38 +24,36 @@
 
 #include <assert.h>
 #include <stdint.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/time.h>
 
 #include "../libmill.h"
 
-static coroutine void worker(void) {
-}
+static coroutine void worker(void) {}
 
 int main(int argc, char *argv[]) {
-    if(argc != 2) {
-        printf("usage: go <millions-of-coroutines>\n");
-        return 1;
-    }
-    long count = atol(argv[1]) * 1000000;
+  if (argc != 2) {
+    printf("usage: go <millions-of-coroutines>\n");
+    return 1;
+  }
+  long count = atol(argv[1]) * 1000000;
 
-    int64_t start = now();
+  int64_t start = now();
 
-    long i;
-    for(i = 0; i != count; ++i)
-        go(worker());
+  long i;
+  for (i = 0; i != count; ++i)
+    go(worker());
 
-    int64_t stop = now();
-    long duration = (long)(stop - start);
-    long ns = (duration * 1000000) / count;
+  int64_t stop = now();
+  long duration = (long)(stop - start);
+  long ns = (duration * 1000000) / count;
 
-    printf("executed %ldM coroutines in %f seconds\n",
-        (long)(count / 1000000), ((float)duration) / 1000);
-    printf("duration of one coroutine creation+termination: %ld ns\n", ns);
-    printf("coroutine creations+terminatios per second: %fM\n",
-        (float)(1000000000 / ns) / 1000000);
+  printf("executed %ldM coroutines in %f seconds\n", (long)(count / 1000000),
+         ((float)duration) / 1000);
+  printf("duration of one coroutine creation+termination: %ld ns\n", ns);
+  printf("coroutine creations+terminatios per second: %fM\n",
+         (float)(1000000000 / ns) / 1000000);
 
-    return 0;
+  return 0;
 }
-

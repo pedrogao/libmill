@@ -24,86 +24,84 @@
 
 #include <assert.h>
 #include <stdint.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/time.h>
 
 #include "../libmill.h"
 
 static coroutine void connector(void) {
-    tcpsock s = tcpconnect(iplocal("127.0.0.1", 5555, 0), -1);
-    assert(s);
-    char buf[1];
-    tcprecv(s, buf, 1, -1);
-    assert(0);
+  tcpsock s = tcpconnect(iplocal("127.0.0.1", 5555, 0), -1);
+  assert(s);
+  char buf[1];
+  tcprecv(s, buf, 1, -1);
+  assert(0);
 }
 
 static coroutine void sender(long roundtrips) {
-    tcpsock s = tcpconnect(iplocal("127.0.0.1", 5555, 0), -1);
-    assert(s);
-    char buf[1];
-    int i;
-    size_t nbytes;
-    for(i = 0; i != roundtrips; ++i) {
-        nbytes = tcprecv(s, buf, 1, -1);
-        assert(errno == 0);
-        assert(nbytes == 1);
-        assert(buf[0] == 'A');
-        nbytes = tcpsend(s, "A", 1, -1);
-        assert(errno == 0);
-        assert(nbytes == 1);
-        tcpflush(s, -1);
-        assert(errno == 0);
-    }
+  tcpsock s = tcpconnect(iplocal("127.0.0.1", 5555, 0), -1);
+  assert(s);
+  char buf[1];
+  int i;
+  size_t nbytes;
+  for (i = 0; i != roundtrips; ++i) {
+    nbytes = tcprecv(s, buf, 1, -1);
+    assert(errno == 0);
+    assert(nbytes == 1);
+    assert(buf[0] == 'A');
+    nbytes = tcpsend(s, "A", 1, -1);
+    assert(errno == 0);
+    assert(nbytes == 1);
+    tcpflush(s, -1);
+    assert(errno == 0);
+  }
 }
 
 int main(int argc, char *argv[]) {
-    if(argc != 3) {
-        printf("usage: c10k <parallel-connections> <roundtrip-count>\n");
-        return 1;
-    }
-    long conns = atol(argv[1]);
-    long roundtrips = atol(argv[2]);
-    assert(conns >= 1);
+  if (argc != 3) {
+    printf("usage: c10k <parallel-connections> <roundtrip-count>\n");
+    return 1;
+  }
+  long conns = atol(argv[1]);
+  long roundtrips = atol(argv[2]);
+  assert(conns >= 1);
 
-    tcpsock ls = tcplisten(iplocal("127.0.0.1", 5555, 0), 10);
-    assert(ls);
-    int i;
-    for(i = 0; i != conns - 1; ++i) {
-        go(connector());
-        tcpsock as = tcpaccept(ls, -1);
-        assert(as);
-    }
-    go(sender(roundtrips));
+  tcpsock ls = tcplisten(iplocal("127.0.0.1", 5555, 0), 10);
+  assert(ls);
+  int i;
+  for (i = 0; i != conns - 1; ++i) {
+    go(connector());
     tcpsock as = tcpaccept(ls, -1);
     assert(as);
+  }
+  go(sender(roundtrips));
+  tcpsock as = tcpaccept(ls, -1);
+  assert(as);
 
-    int64_t start = now();
+  int64_t start = now();
 
-    char buf[1];
-    size_t nbytes;
-    for(i = 0; i != roundtrips; ++i) {
-        nbytes = tcpsend(as, "A", 1, -1);
-        assert(errno == 0);
-        assert(nbytes == 1);
-        tcpflush(as, -1);
-        assert(errno == 0);
-        nbytes = tcprecv(as, buf, 1, -1);
-        assert(errno == 0);
-        assert(nbytes == 1);
-        assert(buf[0] == 'A');
-    }
+  char buf[1];
+  size_t nbytes;
+  for (i = 0; i != roundtrips; ++i) {
+    nbytes = tcpsend(as, "A", 1, -1);
+    assert(errno == 0);
+    assert(nbytes == 1);
+    tcpflush(as, -1);
+    assert(errno == 0);
+    nbytes = tcprecv(as, buf, 1, -1);
+    assert(errno == 0);
+    assert(nbytes == 1);
+    assert(buf[0] == 'A');
+  }
 
-    int64_t stop = now();
-    long duration = (long)(stop - start);
-    long us = (duration * 1000) / roundtrips;
+  int64_t stop = now();
+  long duration = (long)(stop - start);
+  long us = (duration * 1000) / roundtrips;
 
-    printf("done %ld roundtrips in %f seconds\n",
-        roundtrips, ((float)duration) / 1000);
-    printf("duration of a single roundtrip: %ld us\n", us);
-    printf("roundtrips per second: %ld\n",
-        (long)(roundtrips * 1000 / duration));
+  printf("done %ld roundtrips in %f seconds\n", roundtrips,
+         ((float)duration) / 1000);
+  printf("duration of a single roundtrip: %ld us\n", us);
+  printf("roundtrips per second: %ld\n", (long)(roundtrips * 1000 / duration));
 
-    return 0;
+  return 0;
 }
-

@@ -34,20 +34,20 @@ struct mill_timer;
 typedef void (*mill_timer_callback)(struct mill_timer *timer);
 
 struct mill_timer {
-    /* Item in the global list of all timers. */
-    struct mill_list_item item;
-    /* The deadline when the timer expires. -1 if the timer is not active. */
-    int64_t expiry;
-    /* Callback invoked when timer expires. Pfui Teufel! */
-    mill_timer_callback callback;
+  /* Item in the global list of all timers. */
+  struct mill_list_item item;
+  /* The deadline when the timer expires. -1 if the timer is not active. */
+  int64_t expiry;
+  /* Callback invoked when timer expires. Pfui Teufel! */
+  mill_timer_callback callback;
 };
 
 /* Test wheather the timer is active. */
-#define mill_timer_enabled(tm)  ((tm)->expiry >= 0)
+#define mill_timer_enabled(tm) ((tm)->expiry >= 0)
 
 /* Add a timer for the running coroutine. */
 void mill_timer_add(struct mill_timer *timer, int64_t deadline,
-    mill_timer_callback callback);
+                    mill_timer_callback callback);
 
 /* Remove the timer associated with the running coroutine. */
 void mill_timer_rm(struct mill_timer *timer);
@@ -65,4 +65,3 @@ int mill_timer_fire(void);
 void mill_timer_postfork(void);
 
 #endif
-

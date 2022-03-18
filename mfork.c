@@ -30,14 +30,14 @@
 #include "timer.h"
 
 pid_t mill_mfork_(void) {
-    pid_t pid = fork();
-    if(pid != 0) {
-        /* Parent. */
-        return pid;
-    }
-    /* Child. */
-    mill_cr_postfork();
-    mill_poller_postfork();
-    mill_timer_postfork();
-    return 0;
+  pid_t pid = fork();
+  if (pid != 0) {
+    /* Parent. */
+    return pid;
+  }
+  /* Child. */
+  mill_cr_postfork();
+  mill_poller_postfork();
+  mill_timer_postfork();
+  return 0;
 }

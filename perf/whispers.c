@@ -24,43 +24,43 @@
 
 #include <assert.h>
 #include <stdint.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/time.h>
 
 #include "../libmill.h"
 
 static coroutine void whisper(chan left, chan right) {
-    int val = chr(right, int);
-    chs(left, int, val + 1);
+  int val = chr(right, int);
+  chs(left, int, val + 1);
 }
 
 int main(int argc, char *argv[]) {
-    if(argc != 2) {
-        printf("usage: whispers <number-of-whispers>\n");
-        return 1;
-    }
+  if (argc != 2) {
+    printf("usage: whispers <number-of-whispers>\n");
+    return 1;
+  }
 
-    long count = atol(argv[1]);
-    int64_t start = now();
+  long count = atol(argv[1]);
+  int64_t start = now();
 
-    chan leftmost = chmake(int, 0);
-    chan left = leftmost, right = leftmost;
-    long i;
-    for (i = 0; i < count; ++i) {
-        right = chmake(int, 0);
-        go(whisper(left, right));
-        left = right;
-    }
+  chan leftmost = chmake(int, 0);
+  chan left = leftmost, right = leftmost;
+  long i;
+  for (i = 0; i < count; ++i) {
+    right = chmake(int, 0);
+    go(whisper(left, right));
+    left = right;
+  }
 
-    chs(right, int, 1);
-    int res = chr(leftmost, int);
-    assert(res == count + 1);
+  chs(right, int, 1);
+  int res = chr(leftmost, int);
+  assert(res == count + 1);
 
-    int64_t stop = now();
-    long duration = (long)(stop - start);
+  int64_t stop = now();
+  long duration = (long)(stop - start);
 
-    printf("took %f seconds\n", (float)duration / 1000);
+  printf("took %f seconds\n", (float)duration / 1000);
 
-    return 0;
+  return 0;
 }

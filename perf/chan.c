@@ -24,50 +24,49 @@
 
 #include <assert.h>
 #include <stdint.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/time.h>
 
 #include "../libmill.h"
 
 static coroutine void worker(chan in, chan out) {
-    int val;
-    while(1) {
-        val = chr(in, int);
-        chs(out, int, val);
-    }
+  int val;
+  while (1) {
+    val = chr(in, int);
+    chs(out, int, val);
+  }
 }
 
 int main(int argc, char *argv[]) {
-    if(argc != 2) {
-        printf("usage: chan <millions-of-roundtrips>\n");
-        return 1;
-    }
-    long count = atol(argv[1]) * 1000000;
+  if (argc != 2) {
+    printf("usage: chan <millions-of-roundtrips>\n");
+    return 1;
+  }
+  long count = atol(argv[1]) * 1000000;
 
-    chan out = chmake(int, 0);
-    chan in = chmake(int, 0);
+  chan out = chmake(int, 0);
+  chan in = chmake(int, 0);
 
-    int64_t start = now();
-    go(worker(out, in));
+  int64_t start = now();
+  go(worker(out, in));
 
-    int val = 0;
-    long i;
-    for(i = 0; i != count; ++i) {
-        chs(out, int, val);
-        val = chr(in, int);
-    }
+  int val = 0;
+  long i;
+  for (i = 0; i != count; ++i) {
+    chs(out, int, val);
+    val = chr(in, int);
+  }
 
-    int64_t stop = now();
-    long duration = (long)(stop - start);
-    long ns = (duration * 1000000) / (count * 2);
+  int64_t stop = now();
+  long duration = (long)(stop - start);
+  long ns = (duration * 1000000) / (count * 2);
 
-    printf("done %ldM roundtrips in %f seconds\n",
-        (long)(count / 1000000), ((float)duration) / 1000);
-    printf("duration of passing a single message: %ld ns\n", ns);
-    printf("message passes per second: %fM\n",
-        (float)(1000000000 / ns) / 1000000);
+  printf("done %ldM roundtrips in %f seconds\n", (long)(count / 1000000),
+         ((float)duration) / 1000);
+  printf("duration of passing a single message: %ld ns\n", ns);
+  printf("message passes per second: %fM\n",
+         (float)(1000000000 / ns) / 1000000);
 
-    return 0;
+  return 0;
 }
-

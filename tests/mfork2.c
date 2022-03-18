@@ -22,8 +22,8 @@
 
 */
 
-#include <errno.h>
 #include <assert.h>
+#include <errno.h>
 #include <stdio.h>
 #include <sys/wait.h>
 
@@ -32,30 +32,29 @@
 int timeout = 0;
 
 coroutine void worker(void) {
-    msleep(now() + 100);
-    timeout = 1;
+  msleep(now() + 100);
+  timeout = 1;
 }
 
 int main() {
-    /* Start second coroutine before forking. */
-    go(worker());
-    /* Fork. */
-    pid_t pid = mfork();
+  /* Start second coroutine before forking. */
+  go(worker());
+  /* Fork. */
+  pid_t pid = mfork();
+  assert(pid != -1);
+  /* Parent waits for the child. */
+  if (pid > 0) {
+    int status;
+    pid = waitpid(pid, &status, 0);
     assert(pid != -1);
-    /* Parent waits for the child. */
-    if(pid > 0) {
-        int status;
-        pid = waitpid(pid, &status, 0);
-        assert(pid != -1);
-        assert(WIFEXITED(status));
-        assert(WEXITSTATUS(status) == 0);
-        return 0;
-    }
-
-    /* Child waits to see whether the timer was properly removed. */
-    msleep(now() + 200);
-    assert(!timeout);
-
+    assert(WIFEXITED(status));
+    assert(WEXITSTATUS(status) == 0);
     return 0;
-}
+  }
 
+  /* Child waits to see whether the timer was properly removed. */
+  msleep(now() + 200);
+  assert(!timeout);
+
+  return 0;
+}

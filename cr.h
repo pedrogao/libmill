@@ -36,12 +36,12 @@
 #include "utils.h"
 
 enum mill_state {
-    MILL_READY,
-    MILL_MSLEEP,
-    MILL_FDWAIT,
-    MILL_CHR,
-    MILL_CHS,
-    MILL_CHOOSE
+  MILL_READY,
+  MILL_MSLEEP,
+  MILL_FDWAIT,
+  MILL_CHR,
+  MILL_CHS,
+  MILL_CHOOSE
 };
 
 /* The coroutine. The memory layout looks like this:
@@ -57,56 +57,56 @@ enum mill_state {
 
 */
 struct mill_cr {
-    /* Status of the coroutine. Used for debugging purposes. */
-    enum mill_state state;
+  /* Status of the coroutine. Used for debugging purposes. */
+  enum mill_state state;
 
-    /* The coroutine is stored in this list if it is not blocked and it is
-       waiting to be executed. In such case 'is_ready' is set to 1, otherwise
-       it's set to 0. */
-    int is_ready;
-    struct mill_slist_item ready;
+  /* The coroutine is stored in this list if it is not blocked and it is
+     waiting to be executed. In such case 'is_ready' is set to 1, otherwise
+     it's set to 0. */
+  int is_ready;
+  struct mill_slist_item ready;
 
-    /* If the coroutine is waiting for a deadline, it uses this timer. */
-    struct mill_timer timer;
+  /* If the coroutine is waiting for a deadline, it uses this timer. */
+  struct mill_timer timer;
 
-    /* The file descriptor for which the coroutine waits for an event
-       when blocked in fdwait(). -1 when it isn't waiting for any event. */
-    int fd;
+  /* The file descriptor for which the coroutine waits for an event
+     when blocked in fdwait(). -1 when it isn't waiting for any event. */
+  int fd;
 
-    /* When the coroutine is blocked in fdwait(), the events that the function
-       waits for. This is used only for debugging purposes. */
-    int events;
+  /* When the coroutine is blocked in fdwait(), the events that the function
+     waits for. This is used only for debugging purposes. */
+  int events;
 
-    /* This structure is used when the coroutine is executing a choose
-       statement. */
-    struct mill_choosedata choosedata;
+  /* This structure is used when the coroutine is executing a choose
+     statement. */
+  struct mill_choosedata choosedata;
 
-    /* Stored coroutine context while it is not executing. */
+  /* Stored coroutine context while it is not executing. */
 #if defined(__x86_64__)
-    uint64_t ctx[10];
+  uint64_t ctx[10];
 #else
-    sigjmp_buf ctx;
+  sigjmp_buf ctx;
 #endif
 
-    /* Argument to resume() call being passed to the blocked suspend() call. */
-    int result;
+  /* Argument to resume() call being passed to the blocked suspend() call. */
+  int result;
 
-    /* If size of the valbuf needs to be larger than mill_valbuf size it is
-       allocated dyncamically and the pointer, along with the size of the buffer
-       is stored here. */
-    void *valbuf;
-    size_t valbuf_sz;
+  /* If size of the valbuf needs to be larger than mill_valbuf size it is
+     allocated dyncamically and the pointer, along with the size of the buffer
+     is stored here. */
+  void *valbuf;
+  size_t valbuf_sz;
 
-    /* Coroutine-local storage. */
-    void *clsval;
+  /* Coroutine-local storage. */
+  void *clsval;
 
 #if defined MILL_VALGRIND
-    /* Valgrind stack identifier. */
-    int sid;
+  /* Valgrind stack identifier. */
+  int sid;
 #endif
 
-    /* Debugging info. */
-    struct mill_debug_cr debug;
+  /* Debugging info. */
+  struct mill_debug_cr debug;
 };
 
 /* Fake coroutine corresponding to the main thread of execution. */
@@ -129,7 +129,7 @@ void mill_resume(struct mill_cr *cr, int result);
    to be at least 'size' bytes long. */
 void *mill_valbuf(struct mill_cr *cr, size_t size);
 
-/* Called in the child process after fork to stop all the coroutines 
+/* Called in the child process after fork to stop all the coroutines
    inherited from the parent. */
 void mill_cr_postfork(void);
 

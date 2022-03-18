@@ -29,12 +29,12 @@
    it can be used both as a queue and as a stack. */
 
 struct mill_slist_item {
-    struct mill_slist_item *next;
+  struct mill_slist_item *next;
 };
 
 struct mill_slist {
-    struct mill_slist_item *first;
-    struct mill_slist_item *last;
+  struct mill_slist_item *first;
+  struct mill_slist_item *last;
 };
 
 /* Initialise the list. To statically initialise the list use = {0}. */
@@ -56,10 +56,9 @@ void mill_slist_push(struct mill_slist *self, struct mill_slist_item *item);
 
 /* Push the item to the end of the list. */
 void mill_slist_push_back(struct mill_slist *self,
-    struct mill_slist_item *item);
+                          struct mill_slist_item *item);
 
 /* Pop an item from the beginning of the list. */
 struct mill_slist_item *mill_slist_pop(struct mill_slist *self);
 
 #endif
-

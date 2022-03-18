@@ -27,34 +27,33 @@
 #include "slist.h"
 
 void mill_slist_init(struct mill_slist *self) {
-    self->first = NULL;
-    self->last = NULL;
+  self->first = NULL;
+  self->last = NULL;
 }
 
 void mill_slist_push(struct mill_slist *self, struct mill_slist_item *item) {
-    item->next = self->first;
-    self->first = item;
-    if(!self->last)
-        self->last = item;
-}
-
-void mill_slist_push_back(struct mill_slist *self,
-      struct mill_slist_item *item) {
-    item->next = NULL;
-    if(!self->last)
-        self->first = item;
-    else
-        self->last->next = item;
+  item->next = self->first;
+  self->first = item;
+  if (!self->last)
     self->last = item;
 }
 
-struct mill_slist_item *mill_slist_pop(struct mill_slist *self) {
-    if(!self->first)
-        return NULL;
-    struct mill_slist_item *it = self->first;
-    self->first = self->first->next;
-    if(!self->first)
-        self->last = NULL;
-    return it;
+void mill_slist_push_back(struct mill_slist *self,
+                          struct mill_slist_item *item) {
+  item->next = NULL;
+  if (!self->last)
+    self->first = item;
+  else
+    self->last->next = item;
+  self->last = item;
 }
 
+struct mill_slist_item *mill_slist_pop(struct mill_slist *self) {
+  if (!self->first)
+    return NULL;
+  struct mill_slist_item *it = self->first;
+  self->first = self->first->next;
+  if (!self->first)
+    self->last = NULL;
+  return it;
+}

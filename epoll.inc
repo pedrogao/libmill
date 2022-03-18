@@ -44,12 +44,12 @@ static int mill_efd = -1;
    to send data to the descriptor. Thus, we are going to keep an array of
    pointer pairs for each file descriptor. */
 struct mill_crpair {
-    struct mill_cr *in;
-    struct mill_cr *out;
-    uint32_t currevs;
-    /* 1-based index, 0 stands for "not part of the list", MILL_ENDLIST
-       stads for "no more elements in the list. */
-    uint32_t next;
+  struct mill_cr *in;
+  struct mill_cr *out;
+  uint32_t currevs;
+  /* 1-based index, 0 stands for "not part of the list", MILL_ENDLIST
+     stads for "no more elements in the list. */
+  uint32_t next;
 };
 
 static struct mill_crpair *mill_crpairs = NULL;
@@ -57,171 +57,171 @@ static int mill_ncrpairs = 0;
 static uint32_t mill_changelist = MILL_ENDLIST;
 
 void mill_poller_init(void) {
-    struct rlimit rlim;
-    int rc = getrlimit(RLIMIT_NOFILE, &rlim);
-    if(mill_slow(rc < 0)) return;
-    mill_ncrpairs = rlim.rlim_max;
-    mill_crpairs = (struct mill_crpair*)
-        calloc(mill_ncrpairs, sizeof(struct mill_crpair));
-    if(mill_slow(!mill_crpairs)) {errno = ENOMEM; return;}
-    mill_efd = epoll_create(1);
-    if(mill_slow(mill_efd < 0)) {
-        free(mill_crpairs);
-        mill_crpairs = NULL;
-        return;
-    }
-    errno = 0;
+  struct rlimit rlim;
+  int rc = getrlimit(RLIMIT_NOFILE, &rlim);
+  if (mill_slow(rc < 0))
+    return;
+  mill_ncrpairs = rlim.rlim_max;
+  mill_crpairs =
+      (struct mill_crpair *)calloc(mill_ncrpairs, sizeof(struct mill_crpair));
+  if (mill_slow(!mill_crpairs)) {
+    errno = ENOMEM;
+    return;
+  }
+  mill_efd = epoll_create(1);
+  if (mill_slow(mill_efd < 0)) {
+    free(mill_crpairs);
+    mill_crpairs = NULL;
+    return;
+  }
+  errno = 0;
 }
 
 void mill_poller_postfork(void) {
-    if(mill_efd != -1) {
-        int rc = close(mill_efd);
-        mill_assert(rc == 0);
-    }
-    mill_efd = -1;
-    mill_crpairs = NULL;
-    mill_ncrpairs = 0;
-    mill_changelist = MILL_ENDLIST;
-    mill_poller_init();
+  if (mill_efd != -1) {
+    int rc = close(mill_efd);
+    mill_assert(rc == 0);
+  }
+  mill_efd = -1;
+  mill_crpairs = NULL;
+  mill_ncrpairs = 0;
+  mill_changelist = MILL_ENDLIST;
+  mill_poller_init();
 }
 
 static void mill_poller_add(int fd, int events) {
-    struct mill_crpair *crp = &mill_crpairs[fd];
-    if(events & FDW_IN) {
-        if(crp->in)
-            mill_panic(
-                "multiple coroutines waiting for a single file descriptor");
-        crp->in = mill_running;
-    }
-    if(events & FDW_OUT) {
-        if(crp->out)
-            mill_panic(
-                "multiple coroutines waiting for a single file descriptor");
-        crp->out = mill_running;
-    }
-    if(!crp->next) {
-        crp->next = mill_changelist;
-        mill_changelist = fd + 1;
-    }
+  struct mill_crpair *crp = &mill_crpairs[fd];
+  if (events & FDW_IN) {
+    if (crp->in)
+      mill_panic("multiple coroutines waiting for a single file descriptor");
+    crp->in = mill_running;
+  }
+  if (events & FDW_OUT) {
+    if (crp->out)
+      mill_panic("multiple coroutines waiting for a single file descriptor");
+    crp->out = mill_running;
+  }
+  if (!crp->next) {
+    crp->next = mill_changelist;
+    mill_changelist = fd + 1;
+  }
 }
 
 static void mill_poller_rm(struct mill_cr *cr) {
-    int fd = cr->fd;
-    mill_assert(fd != -1);
-    struct mill_crpair *crp = &mill_crpairs[fd];
-    if(crp->in == cr) {
-        crp->in = NULL;
-        cr->fd = -1;
-    }
-    if(crp->out == cr) {
-        crp->out = NULL;
-        cr->fd = -1;
-    }
-    if(!crp->next) {
-        crp->next = mill_changelist;
-        mill_changelist = fd + 1;
-    }
+  int fd = cr->fd;
+  mill_assert(fd != -1);
+  struct mill_crpair *crp = &mill_crpairs[fd];
+  if (crp->in == cr) {
+    crp->in = NULL;
+    cr->fd = -1;
+  }
+  if (crp->out == cr) {
+    crp->out = NULL;
+    cr->fd = -1;
+  }
+  if (!crp->next) {
+    crp->next = mill_changelist;
+    mill_changelist = fd + 1;
+  }
 }
 
 static void mill_poller_clean(int fd) {
-    struct mill_crpair *crp = &mill_crpairs[fd];
-    mill_assert(!crp->in);
-    mill_assert(!crp->out);
-    /* Remove the file descriptor from the pollset, if it is still present. */
-    if(crp->currevs) {   
-        struct epoll_event ev;
-        ev.data.fd = fd;
-        ev.events = 0;
-        int rc = epoll_ctl(mill_efd, EPOLL_CTL_DEL, fd, &ev);
-        mill_assert(rc == 0 || errno == ENOENT);
-    }
-    /* Clean the cache. */
-    crp->currevs = 0;
-    if(!crp->next) {
-        crp->next = mill_changelist;
-        mill_changelist = fd + 1;
-    }
+  struct mill_crpair *crp = &mill_crpairs[fd];
+  mill_assert(!crp->in);
+  mill_assert(!crp->out);
+  /* Remove the file descriptor from the pollset, if it is still present. */
+  if (crp->currevs) {
+    struct epoll_event ev;
+    ev.data.fd = fd;
+    ev.events = 0;
+    int rc = epoll_ctl(mill_efd, EPOLL_CTL_DEL, fd, &ev);
+    mill_assert(rc == 0 || errno == ENOENT);
+  }
+  /* Clean the cache. */
+  crp->currevs = 0;
+  if (!crp->next) {
+    crp->next = mill_changelist;
+    mill_changelist = fd + 1;
+  }
 }
 
 static int mill_poller_wait(int timeout) {
-    /* Apply any changes to the pollset.
-       TODO: Use epoll_ctl_batch once available. */
-    while(mill_changelist != MILL_ENDLIST) {
-        int fd = mill_changelist - 1;
-        struct mill_crpair *crp = &mill_crpairs[fd];
-        struct epoll_event ev;
-        ev.data.fd = fd;
-        ev.events = 0;
-        if(crp->in)
-            ev.events |= EPOLLIN;
-        if(crp->out)
-            ev.events |= EPOLLOUT;
-        if(crp->currevs != ev.events) {
-            int op;
-            if(!ev.events)
-                 op = EPOLL_CTL_DEL;
-            else if(!crp->currevs)
-                 op = EPOLL_CTL_ADD;
-            else
-                 op = EPOLL_CTL_MOD;
-            crp->currevs = ev.events;
-            int rc = epoll_ctl(mill_efd, op, fd, &ev);
-            mill_assert(rc == 0);
-        }
-        mill_changelist = crp->next;
-        crp->next = 0;
+  /* Apply any changes to the pollset.
+     TODO: Use epoll_ctl_batch once available. */
+  while (mill_changelist != MILL_ENDLIST) {
+    int fd = mill_changelist - 1;
+    struct mill_crpair *crp = &mill_crpairs[fd];
+    struct epoll_event ev;
+    ev.data.fd = fd;
+    ev.events = 0;
+    if (crp->in)
+      ev.events |= EPOLLIN;
+    if (crp->out)
+      ev.events |= EPOLLOUT;
+    if (crp->currevs != ev.events) {
+      int op;
+      if (!ev.events)
+        op = EPOLL_CTL_DEL;
+      else if (!crp->currevs)
+        op = EPOLL_CTL_ADD;
+      else
+        op = EPOLL_CTL_MOD;
+      crp->currevs = ev.events;
+      int rc = epoll_ctl(mill_efd, op, fd, &ev);
+      mill_assert(rc == 0);
     }
-    /* Wait for events. */
-    struct epoll_event evs[MILL_EPOLLSETSIZE];
-    int numevs;
-    while(1) {
-        numevs = epoll_wait(mill_efd, evs, MILL_EPOLLSETSIZE, timeout);
-        if(numevs < 0 && errno == EINTR)
-            continue;
-        mill_assert(numevs >= 0);
-        break;
+    mill_changelist = crp->next;
+    crp->next = 0;
+  }
+  /* Wait for events. */
+  struct epoll_event evs[MILL_EPOLLSETSIZE];
+  int numevs;
+  while (1) {
+    numevs = epoll_wait(mill_efd, evs, MILL_EPOLLSETSIZE, timeout);
+    if (numevs < 0 && errno == EINTR)
+      continue;
+    mill_assert(numevs >= 0);
+    break;
+  }
+  /* Fire file descriptor events. */
+  int i;
+  for (i = 0; i != numevs; ++i) {
+    struct mill_crpair *crp = &mill_crpairs[evs[i].data.fd];
+    int inevents = 0;
+    int outevents = 0;
+    /* Set the result values. */
+    if (evs[i].events & EPOLLIN)
+      inevents |= FDW_IN;
+    if (evs[i].events & EPOLLOUT)
+      outevents |= FDW_OUT;
+    if (evs[i].events & (EPOLLERR | EPOLLHUP)) {
+      inevents |= FDW_ERR;
+      outevents |= FDW_ERR;
     }
-    /* Fire file descriptor events. */
-    int i;
-    for(i = 0; i != numevs; ++i) {
-        struct mill_crpair *crp = &mill_crpairs[evs[i].data.fd];
-        int inevents = 0;
-        int outevents = 0;
-        /* Set the result values. */
-        if(evs[i].events & EPOLLIN)
-            inevents |= FDW_IN;
-        if(evs[i].events & EPOLLOUT)
-            outevents |= FDW_OUT;
-        if(evs[i].events & (EPOLLERR | EPOLLHUP)) {
-            inevents |= FDW_ERR;
-            outevents |= FDW_ERR;
-        }
-        /* Resume the blocked coroutines. */  
-        if(crp->in == crp->out) {
-            struct mill_cr *cr = crp->in;
-            mill_resume(cr, inevents | outevents);
-            mill_poller_rm(cr);
-            if(mill_timer_enabled(&cr->timer))
-                mill_timer_rm(&cr->timer);
-        }
-        else {
-            if(crp->in && inevents) {
-                struct mill_cr *cr = crp->in;
-                mill_resume(cr, inevents);
-                mill_poller_rm(cr);
-                if(mill_timer_enabled(&cr->timer))
-                    mill_timer_rm(&cr->timer);
-            }
-            if(crp->out && outevents) {
-                struct mill_cr *cr = crp->out;
-                mill_resume(cr, outevents);
-                mill_poller_rm(cr);
-                if(mill_timer_enabled(&cr->timer))
-                    mill_timer_rm(&cr->timer);
-            }
-        }
+    /* Resume the blocked coroutines. */
+    if (crp->in == crp->out) {
+      struct mill_cr *cr = crp->in;
+      mill_resume(cr, inevents | outevents);
+      mill_poller_rm(cr);
+      if (mill_timer_enabled(&cr->timer))
+        mill_timer_rm(&cr->timer);
+    } else {
+      if (crp->in && inevents) {
+        struct mill_cr *cr = crp->in;
+        mill_resume(cr, inevents);
+        mill_poller_rm(cr);
+        if (mill_timer_enabled(&cr->timer))
+          mill_timer_rm(&cr->timer);
+      }
+      if (crp->out && outevents) {
+        struct mill_cr *cr = crp->out;
+        mill_resume(cr, outevents);
+        mill_poller_rm(cr);
+        if (mill_timer_enabled(&cr->timer))
+          mill_timer_rm(&cr->timer);
+      }
     }
-    /* Return 0 in case of time out. 1 if at least one coroutine was resumed. */
-    return numevs > 0 ? 1 : 0;
+  }
+  /* Return 0 in case of time out. 1 if at least one coroutine was resumed. */
+  return numevs > 0 ? 1 : 0;
 }
-

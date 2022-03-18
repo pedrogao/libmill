@@ -26,46 +26,42 @@
 
 #include "list.h"
 
-void mill_list_init(struct mill_list *self)
-{
-    self->first = NULL;
-    self->last = NULL;
+void mill_list_init(struct mill_list *self) {
+  self->first = NULL;
+  self->last = NULL;
 }
 
 void mill_list_insert(struct mill_list *self, struct mill_list_item *item,
-    struct mill_list_item *it)
-{
-    item->prev = it ? it->prev : self->last;
-    item->next = it;
-    if(item->prev)
-        item->prev->next = item;
-    if(item->next)
-        item->next->prev = item;
-    if(!self->first || self->first == it)
-        self->first = item;
-    if(!it)
-        self->last = item;
+                      struct mill_list_item *it) {
+  item->prev = it ? it->prev : self->last;
+  item->next = it;
+  if (item->prev)
+    item->prev->next = item;
+  if (item->next)
+    item->next->prev = item;
+  if (!self->first || self->first == it)
+    self->first = item;
+  if (!it)
+    self->last = item;
 }
 
 struct mill_list_item *mill_list_erase(struct mill_list *self,
-    struct mill_list_item *item)
-{
-    struct mill_list_item *next;
+                                       struct mill_list_item *item) {
+  struct mill_list_item *next;
 
-    if(item->prev)
-        item->prev->next = item->next;
-    else
-        self->first = item->next;
-    if(item->next)
-        item->next->prev = item->prev;
-    else
-        self->last = item->prev;
+  if (item->prev)
+    item->prev->next = item->next;
+  else
+    self->first = item->next;
+  if (item->next)
+    item->next->prev = item->prev;
+  else
+    self->last = item->prev;
 
-    next = item->next;
+  next = item->next;
 
-    item->prev = NULL;
-    item->next = NULL;
+  item->prev = NULL;
+  item->next = NULL;
 
-    return next;
+  return next;
 }
-

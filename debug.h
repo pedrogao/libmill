@@ -29,23 +29,23 @@
 #include "utils.h"
 
 struct mill_debug_cr {
-    /* List of all coroutines. */
-    struct mill_list_item item;
-    /* Unique ID of the coroutine. */
-    int id;
-    /* File and line where the coroutine was launched. */
-    const char *created;
-    /* File and line where the current blocking operation was invoked from. */
-    const char *current;
+  /* List of all coroutines. */
+  struct mill_list_item item;
+  /* Unique ID of the coroutine. */
+  int id;
+  /* File and line where the coroutine was launched. */
+  const char *created;
+  /* File and line where the current blocking operation was invoked from. */
+  const char *current;
 };
 
 struct mill_debug_chan {
-    /* List of all channels. */
-    struct mill_list_item item;
-    /* Unique ID of the channel. */
-    int id;
-    /* File and line where the channel was created. */
-    const char *created;
+  /* List of all channels. */
+  struct mill_list_item item;
+  /* Unique ID of the channel. */
+  int id;
+  /* File and line where the channel was created. */
+  const char *created;
 };
 
 /* Cause panic. */
@@ -67,7 +67,9 @@ void mill_set_current(struct mill_debug_cr *cr, const char *current);
 extern int mill_tracelevel;
 
 /* Create a trace record. */
-#define mill_trace if(mill_slow(mill_tracelevel)) mill_trace_
+#define mill_trace                                                             \
+  if (mill_slow(mill_tracelevel))                                              \
+  mill_trace_
 void mill_trace_(const char *location, const char *format, ...);
 
 /* Returns 1 if there are any coroutines running, 0 otherwise. */

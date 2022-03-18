@@ -23,48 +23,48 @@
 */
 
 #include <assert.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <fcntl.h>
 
 #include "../libmill.h"
 
 int main() {
-    mfile f1 = mfopen("/tmp/file1", O_RDWR | O_CREAT | O_TRUNC, S_IRUSR |
-        S_IWUSR | S_IRGRP | S_IROTH);
-    assert(f1);
+  mfile f1 = mfopen("/tmp/file1", O_RDWR | O_CREAT | O_TRUNC,
+                    S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+  assert(f1);
 
-    assert(mfeof(f1));
-    assert(errno == 0);
+  assert(mfeof(f1));
+  assert(errno == 0);
 
-    mfwrite(f1, "ABC", 3, -1);
-    assert(errno == 0);
+  mfwrite(f1, "ABC", 3, -1);
+  assert(errno == 0);
 
-    mfflush(f1, -1);
-    assert(errno == 0);
+  mfflush(f1, -1);
+  assert(errno == 0);
 
-    assert(mfeof(f1));
-    assert(errno == 0);
+  assert(mfeof(f1));
+  assert(errno == 0);
 
-    assert(mftell(f1) == 3);
-    assert(errno == 0);
+  assert(mftell(f1) == 3);
+  assert(errno == 0);
 
-    mfseek(f1, 0);
-    assert(errno == 0);
+  mfseek(f1, 0);
+  assert(errno == 0);
 
-    assert(!mfeof(f1));
-    assert(errno == 0);
+  assert(!mfeof(f1));
+  assert(errno == 0);
 
-    char buf[3];
-    size_t sz = mfread(f1, buf, sizeof(buf), -1);
-    assert(errno == 0);
-    assert(sz == 3 && buf[0] == 'A' && buf[1] == 'B' && buf[2] == 'C');
+  char buf[3];
+  size_t sz = mfread(f1, buf, sizeof(buf), -1);
+  assert(errno == 0);
+  assert(sz == 3 && buf[0] == 'A' && buf[1] == 'B' && buf[2] == 'C');
 
-    assert(mfeof(f1));
-    assert(errno == 0);
+  assert(mfeof(f1));
+  assert(errno == 0);
 
-    mfclose(f1);
+  mfclose(f1);
 
-    return 0;
+  return 0;
 }

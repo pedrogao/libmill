@@ -22,8 +22,8 @@
 
 */
 
-#include <errno.h>
 #include <assert.h>
+#include <errno.h>
 #include <stdio.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -33,35 +33,34 @@
 int event = 0;
 
 coroutine void worker(int fd) {
-    int rc = fdwait(fd, FDW_IN, -1);
-    assert(rc == FDW_IN);
-    event = 1;
+  int rc = fdwait(fd, FDW_IN, -1);
+  assert(rc == FDW_IN);
+  event = 1;
 }
 
 int main() {
-    int fds[2];
-    int rc = pipe(fds);
-    assert(rc == 0);
-    go(worker(fds[0]));
-    /* Fork. */
-    pid_t pid = mfork();
+  int fds[2];
+  int rc = pipe(fds);
+  assert(rc == 0);
+  go(worker(fds[0]));
+  /* Fork. */
+  pid_t pid = mfork();
+  assert(pid != -1);
+  /* Parent waits for the child. */
+  if (pid > 0) {
+    ssize_t sz = write(fds[1], "A", 1);
+    assert(sz == 1);
+    int status;
+    pid = waitpid(pid, &status, 0);
     assert(pid != -1);
-    /* Parent waits for the child. */
-    if(pid > 0) {
-        ssize_t sz = write(fds[1], "A", 1);
-        assert(sz == 1);
-        int status;
-        pid = waitpid(pid, &status, 0);
-        assert(pid != -1);
-        assert(WIFEXITED(status));
-        assert(WEXITSTATUS(status) == 0);
-        return 0;
-    }
-
-    /* Child waits to see whether the timer was properly removed. */
-    msleep(now() + 200);
-    assert(!event);
-
+    assert(WIFEXITED(status));
+    assert(WEXITSTATUS(status) == 0);
     return 0;
-}
+  }
 
+  /* Child waits to see whether the timer was properly removed. */
+  msleep(now() + 200);
+  assert(!event);
+
+  return 0;
+}

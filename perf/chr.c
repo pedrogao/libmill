@@ -24,41 +24,40 @@
 
 #include <assert.h>
 #include <stdint.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/time.h>
 
 #include "../libmill.h"
 
 int main(int argc, char *argv[]) {
-    if(argc != 2) {
-        printf("usage: chr <millions-of-messages>\n");
-        return 1;
-    }
-    long count = atol(argv[1]) * 1000000;
+  if (argc != 2) {
+    printf("usage: chr <millions-of-messages>\n");
+    return 1;
+  }
+  long count = atol(argv[1]) * 1000000;
 
-    chan ch = chmake(char, count);
+  chan ch = chmake(char, count);
 
-    long i;
-    for(i = 0; i != count; ++i)
-        chs(ch, char, 0);
+  long i;
+  for (i = 0; i != count; ++i)
+    chs(ch, char, 0);
 
-    int64_t start = now();
+  int64_t start = now();
 
-    char val;
-    for(i = 0; i != count; ++i)
-        val = chr(ch, char);
+  char val;
+  for (i = 0; i != count; ++i)
+    val = chr(ch, char);
 
-    int64_t stop = now();
-    long duration = (long)(stop - start);
-    long ns = duration * 1000000 / count;
+  int64_t stop = now();
+  long duration = (long)(stop - start);
+  long ns = duration * 1000000 / count;
 
-    printf("received %ldM messages in %f seconds\n",
-        (long)(count / 1000000), ((float)duration) / 1000);
-    printf("duration of receiving a single message: %ld ns\n", ns);
-    printf("message received per second: %fM\n",
-        (float)(1000000000 / ns) / 1000000);
+  printf("received %ldM messages in %f seconds\n", (long)(count / 1000000),
+         ((float)duration) / 1000);
+  printf("duration of receiving a single message: %ld ns\n", ns);
+  printf("message received per second: %fM\n",
+         (float)(1000000000 / ns) / 1000000);
 
-    return 0;
+  return 0;
 }
-

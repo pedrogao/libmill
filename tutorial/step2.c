@@ -31,34 +31,33 @@
 
 int main(int argc, char *argv[]) {
 
-    int port = 5555;
-    if(argc > 1)
-        port = atoi(argv[1]);
+  int port = 5555;
+  if (argc > 1)
+    port = atoi(argv[1]);
 
-    ipaddr addr = iplocal(NULL, port, 0);
-    tcpsock ls = tcplisten(addr, 10);
-    if(!ls) {
-        perror("Can't open listening socket");
-        return 1;
-    }
+  ipaddr addr = iplocal(NULL, port, 0);
+  tcpsock ls = tcplisten(addr, 10);
+  if (!ls) {
+    perror("Can't open listening socket");
+    return 1;
+  }
 
-    while(1) {
-        tcpsock as = tcpaccept(ls, -1);
+  while (1) {
+    tcpsock as = tcpaccept(ls, -1);
 
-        tcpsend(as, "What's your name?\r\n", 19, -1);
-        tcpflush(as, -1);
+    tcpsend(as, "What's your name?\r\n", 19, -1);
+    tcpflush(as, -1);
 
-        char inbuf[256];
-        size_t sz = tcprecvuntil(as, inbuf, sizeof(inbuf), "\r", 1, -1);
+    char inbuf[256];
+    size_t sz = tcprecvuntil(as, inbuf, sizeof(inbuf), "\r", 1, -1);
 
-        inbuf[sz - 1] = 0;
-        char outbuf[256];
-        int rc = snprintf(outbuf, sizeof(outbuf), "Hello, %s!\r\n", inbuf);
+    inbuf[sz - 1] = 0;
+    char outbuf[256];
+    int rc = snprintf(outbuf, sizeof(outbuf), "Hello, %s!\r\n", inbuf);
 
-        sz = tcpsend(as, outbuf, rc, -1);
-        tcpflush(as, -1);
+    sz = tcpsend(as, outbuf, rc, -1);
+    tcpflush(as, -1);
 
-        tcpclose(as);
-    }
+    tcpclose(as);
+  }
 }
-

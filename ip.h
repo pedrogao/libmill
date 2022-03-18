@@ -32,4 +32,3 @@ int mill_iplen(ipaddr addr);
 int mill_ipport(ipaddr addr);
 
 #endif
-

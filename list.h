@@ -28,13 +28,13 @@
 /* Doubly-linked list. */
 
 struct mill_list_item {
-    struct mill_list_item *next;
-    struct mill_list_item *prev;
+  struct mill_list_item *next;
+  struct mill_list_item *prev;
 };
 
 struct mill_list {
-    struct mill_list_item *first;
-    struct mill_list_item *last;
+  struct mill_list_item *first;
+  struct mill_list_item *last;
 };
 
 /* Initialise the list. To statically initialise the list use = {0}. */
@@ -53,12 +53,11 @@ void mill_list_init(struct mill_list *self);
 /* Adds the item to the list before the item pointed to by 'it'.
    If 'it' is NULL the item is inserted to the end of the list. */
 void mill_list_insert(struct mill_list *self, struct mill_list_item *item,
-    struct mill_list_item *it);
+                      struct mill_list_item *it);
 
 /* Removes the item from the list and returns pointer to the next item in the
    list. Item must be part of the list. */
 struct mill_list_item *mill_list_erase(struct mill_list *self,
-    struct mill_list_item *item);
+                                       struct mill_list_item *item);
 
 #endif
-
